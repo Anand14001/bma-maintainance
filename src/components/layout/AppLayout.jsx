@@ -1,12 +1,12 @@
 import React from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
-import { LayoutDashboard, Ticket, LogOut, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Ticket, LogOut, PlusCircle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export default function AppLayout() {
-    const { user, logout } = useAuth();
+    const { user, logout, isLoading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -20,7 +20,15 @@ export default function AppLayout() {
         { href: '/tickets', label: 'Tickets', icon: Ticket },
     ];
 
-    if (!user) return <Outlet />;
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+            </div>
+        );
+    }
+
+    if (!user) return <Navigate to="/login" replace />;
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
