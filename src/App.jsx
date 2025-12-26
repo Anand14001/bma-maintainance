@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import TicketsPage from './pages/TicketsPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
 import CreateTicketPage from './pages/CreateTicketPage';
+import { Toaster } from './components/ui/sonner';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
 
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                <Toaster />
             </AuthProvider>
         </Router>
     );

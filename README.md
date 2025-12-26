@@ -44,12 +44,18 @@ Click on **Tickets** in the sidebar (or the bottom bar on mobile).
 Click on any ticket card to see its full details.
 - **Status Updates**: As work progresses, change the status from "Open" to "In Progress" and finally "Resolved".
 - **Activity Log**: Every action (creation, status change, comment) is automatically recorded in the history log with a timestamp.
+48: 
+49: ### Step 5: Notifications
+50: - **Instant Feedback**: Start creating tickets and get instant feedback with beautiful toast notifications located at the top-right corner of your screen.
+51:   - **Green Check**: For successful actions.
+52:   - **Red Alert**: For interruptions or errors.
 
 ## 🛠 For Developers
 
 This project is built using:
 - **React.js** (User Interface)
 - **Tailwind CSS** (Styling)
+- **Radix UI** & **Sonner** (Components & Notifications)
 - **Vite** (Build Tool)
 
 **Architecture**:

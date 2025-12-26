@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { toast } from 'sonner';
 import { ticketService } from '../services/ticket.service';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -40,9 +41,11 @@ export default function CreateTicketPage() {
                 ...data,
                 created_by: user.id
             });
+            toast.success("Ticket created successfully!");
             navigate(`/tickets/${newTicket.id}`);
         } catch (error) {
             console.error('Failed to create ticket:', error);
+            toast.error("Failed to create ticket. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
