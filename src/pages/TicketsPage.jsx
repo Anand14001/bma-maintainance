@@ -5,18 +5,22 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { Search, Filter } from 'lucide-react';
+import { Pagination } from '../components/ui/pagination';
 
 export default function TicketsPage() {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
 
     useEffect(() => {
         const fetchTickets = async () => {
             try {
                 const data = await ticketService.getAll({ status: filterStatus });
                 setTickets(data);
+                setCurrentPage(1); // Reset to first page on fetch/filter change
             } catch (error) {
                 console.error('Error fetching tickets:', error);
             } finally {
@@ -26,10 +30,21 @@ export default function TicketsPage() {
         fetchTickets();
     }, [filterStatus]);
 
+    // Reset to page 1 when search term changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
     const filteredTickets = tickets.filter(ticket =>
         ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredTickets.length / pageSize);
+    const paginatedTickets = filteredTickets.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     );
 
     return (
@@ -68,48 +83,72 @@ export default function TicketsPage() {
             {loading ? (
                 <div className="text-center py-10 text-slate-500">Loading tickets...</div>
             ) : (
-                <div className="grid gap-4">
-                    {filteredTickets.map((ticket) => (
-                        <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                                <CardContent className="p-6">
-                                    <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-center">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{ticket.id}</span>
-                                                <h3 className="font-semibold text-lg">{ticket.title}</h3>
-                                            </div>
-                                            <p className="text-sm text-slate-500 line-clamp-1">{ticket.description}</p>
-                                            <div className="flex gap-4 text-xs text-slate-400 pt-1">
-                                                <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
-                                                <span>•</span>
-                                                <span>{ticket.category}</span>
-                                                <span>•</span>
-                                                <span className={
-                                                    ticket.priority === 'High' ? 'text-red-500 font-medium' :
-                                                        ticket.priority === 'Medium' ? 'text-orange-500' : 'text-blue-500'
-                                                }>{ticket.priority} Priority</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className={`px-3 py-1 rounded-full text-sm font-medium 
-                        ${ticket.status === 'Open' ? 'bg-red-50 text-red-700 border border-red-100' :
-                                                    ticket.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                                                        'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                {ticket.status}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    ))}
+                <div className="space-y-4">
+                    {/* Page Size Selector */}
+                    <div className="flex justify-end items-center gap-2">
+                        <label htmlFor="pageSize" className="text-sm text-slate-500">Rows per page:</label>
+                        <select
+                            id="pageSize"
+                            value={pageSize}
+                            onChange={(e) => setPageSize(Number(e.target.value))}
+                            className="h-8 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                        >
+                            {[5, 10, 20, 50].map(size => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                    {filteredTickets.length === 0 && (
-                        <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-300">
-                            <p className="text-slate-500">No tickets found matching your criteria.</p>
-                        </div>
-                    )}
+                    <div className="grid gap-4">
+                        {paginatedTickets.map((ticket) => (
+                            <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
+                                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                                    <CardContent className="p-6">
+                                        <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-center">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{ticket.id}</span>
+                                                    <h3 className="font-semibold text-lg">{ticket.title}</h3>
+                                                </div>
+                                                <p className="text-sm text-slate-500 line-clamp-1">{ticket.description}</p>
+                                                <div className="flex gap-4 text-xs text-slate-400 pt-1">
+                                                    <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
+                                                    <span>•</span>
+                                                    <span>{ticket.category}</span>
+                                                    <span>•</span>
+                                                    <span className={
+                                                        ticket.priority === 'High' ? 'text-red-500 font-medium' :
+                                                            ticket.priority === 'Medium' ? 'text-orange-500' : 'text-blue-500'
+                                                    }>{ticket.priority} Priority</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className={`px-3 py-1 rounded-full text-sm font-medium 
+                        ${ticket.status === 'Open' ? 'bg-red-50 text-red-700 border border-red-100' :
+                                                        ticket.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                                                            'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                    {ticket.status}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        ))}
+
+                        {filteredTickets.length === 0 && (
+                            <div className="text-center py-12 bg-white rounded-lg border border-dashed border-slate-300">
+                                <p className="text-slate-500">No tickets found matching your criteria.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
         </div>

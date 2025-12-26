@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ticketService } from '../services/ticket.service';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { AlertCircle, CheckCircle2, Clock, Ticket } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, Ticket, ArrowRight } from 'lucide-react';
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -86,8 +87,11 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <div className="grid gap-4 md:grid-cols-1">
                 <Card className="col-span-1">
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Recent Tickets</CardTitle>
+                        <Link to="/tickets" className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium">
+                            View All <ArrowRight className="h-4 w-4" />
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
