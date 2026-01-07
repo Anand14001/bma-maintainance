@@ -1,29 +1,210 @@
-import { delay, setStorageData, getStorageData, STORAGE_KEYS } from './api';
-import { MOCK_USERS } from './mockData';
+import { auth, db } from '../lib/firebase';
+import {
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    createUserWithEmailAndPassword
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const authService = {
     login: async (email, password) => {
-        await delay(800); // Simulate network latency
-        const user = MOCK_USERS.find(u => u.email === email && u.password === password);
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-        if (!user) {
-            throw new Error('Invalid email or password');
+            let userData = {
+                uid: user.uid,
+                email: user.email,
+                id: user.uid
+            };
+
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+
+                    // Normalize status
+                    let status = data.status;
+                    if (!status) {
+                        status = data.isActive === false ? 'inactive' : 'active';
+                    }
+
+                    if (status === 'pending') {
+                        await signOut(auth);
+                        throw new Error("Your account is pending approval from an administrator.");
+                    }
+                    if (status === 'inactive') {
+                        await signOut(auth);
+                        throw new Error("Your account has been deactivated. Please contact the administrator.");
+                    }
+
+                    userData = { ...userData, ...data, status };
+                }
+            } catch (err) {
+                if (err.message.includes("pending") || err.message.includes("deactivated")) throw err;
+                console.error("Error fetching user profile", err);
+            }
+
+            return userData;
+        } catch (error) {
+            throw new Error(error.message);
         }
+    },
 
-        const { password: _, ...userWithoutPassword } = user;
-        setStorageData(STORAGE_KEYS.CURRENT_USER, userWithoutPassword);
-        return userWithoutPassword;
+    register: async (email, password, name, role = 'resident') => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userData = {
+                uid: user.uid,
+                email: user.email,
+                name: name,
+                role: role,
+                id: user.uid,
+                isActive: false, // Legacy verification
+                status: 'pending', // Default for self-registration
+                created_at: new Date().toISOString()
+            };
+
+            await setDoc(doc(db, 'users', user.uid), userData);
+
+            return userData;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    },
+
+    // Admin only - create user (active by default if created by admin)
+    createUser: async (email, password, name, role = 'resident') => {
+        let secondaryApp = null;
+        try {
+            // Dynamically import to avoid top-level side effects
+            const { initializeApp, deleteApp } = await import("firebase/app");
+            const { getAuth: getAuthSecondary, createUserWithEmailAndPassword: createSecondary } = await import("firebase/auth");
+            const { firebaseConfig } = await import("../lib/firebase");
+
+            // 1. Initialize a secondary app instance
+            secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+            const secondaryAuth = getAuthSecondary(secondaryApp);
+
+            // 2. Create user on secondary auth
+            const userCredential = await createSecondary(secondaryAuth, email, password);
+            const newUser = userCredential.user;
+
+            // 3. Create profile in MAIN Firestore (admin still logged in there)
+            const userData = {
+                uid: newUser.uid,
+                email: newUser.email,
+                name: name,
+                role: role,
+                id: newUser.uid,
+                isActive: true,
+                status: 'active', // Admin created users are active
+                created_at: new Date().toISOString()
+            };
+
+            await setDoc(doc(db, 'users', newUser.uid), userData);
+
+            return userData;
+        } catch (error) {
+            console.error("Error creating user:", error);
+            throw error;
+        } finally {
+            // 4. Clean up secondary app
+            if (secondaryApp) {
+                const { deleteApp } = await import("firebase/app");
+                await deleteApp(secondaryApp);
+            }
+        }
+    },
+
+    getAllUsers: async () => {
+        try {
+            const { collection, getDocs } = await import("firebase/firestore");
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            return usersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                let status = data.status;
+                if (!status) {
+                    status = data.isActive === false ? 'inactive' : 'active';
+                }
+                return { id: doc.id, ...data, status };
+            });
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            throw error;
+        }
+    },
+
+    updateUserStatus: async (userId, newStatus) => {
+        try {
+            // newStatus: 'active', 'inactive', 'pending'
+            // Map to boolean for legacy support
+            const isActive = newStatus === 'active';
+
+            const { updateDoc } = await import("firebase/firestore");
+            await updateDoc(doc(db, 'users', userId), {
+                status: newStatus,
+                isActive: isActive
+            });
+        } catch (error) {
+            console.error("Error updating user status:", error);
+            throw error;
+        }
+    },
+
+    updateUserRole: async (userId, newRole) => {
+        try {
+            const { updateDoc } = await import("firebase/firestore");
+            await updateDoc(doc(db, 'users', userId), { role: newRole });
+        } catch (error) {
+            console.error("Error updating user role:", error);
+            throw error;
+        }
     },
 
     logout: async () => {
-        await delay(400);
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-        return true;
+        try {
+            await signOut(auth);
+            return true;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    getCurrentUser: async () => {
-        // Check if we have a session
-        await delay(200);
-        return getStorageData(STORAGE_KEYS.CURRENT_USER);
+    getCurrentUser: () => {
+        return new Promise((resolve) => {
+            const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                unsubscribe();
+                if (user) {
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        let userData = {
+                            uid: user.uid,
+                            email: user.email,
+                            id: user.uid
+                        };
+                        if (userDoc.exists()) {
+                            const data = userDoc.data();
+                            // If we want strict security, we could check isActive here too and logout,
+                            // but usually checking on explicit login/refresh is enough for UX.
+                            userData = { ...userData, ...data };
+                        }
+                        resolve(userData);
+                    } catch (error) {
+                        console.error("Error fetching user profile:", error);
+                        resolve({ uid: user.uid, email: user.email, id: user.uid });
+                    }
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+    },
+
+    onAuthStateChanged: (callback) => {
+        return onAuthStateChanged(auth, callback);
     }
 };

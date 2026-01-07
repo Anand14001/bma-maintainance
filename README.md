@@ -1,66 +1,71 @@
-# BMA Maintenance & Ticket Tracking Portal
+# BMA Maintenance Client
 
-Welcome to the BMA Maintenance Client! This application is a digital tool designed to help committee members streamline the process of tracking, managing, and resolving maintenance complaints and requests.
+A comprehensive maintenance management portal built for the BMA community. This application streamlines ticket tracking, user management, and maintenance requests with a modern, responsive interface.
 
-## 📖 What is this App?
+## 🚀 Features
 
-Imagine a digital logbook that never gets lost. This portal allows committee members to:
-- **Log new complaints** (e.g., "Plumbing leak in Block A").
-- **Track progress** (See if a task is "Open", "In Progress", or "Resolved").
-- **Discuss issues** (Add comments to tickets).
-- **View insights** (See a dashboard of how many issues are pending).
+### 🎫 Ticket Management
+-   **Create Tickets**: Residents can easily report issues with categories (Plumbing, Electrical, etc.) and priority levels.
+-   **Track Status**: Real-time status updates (Open, In Progress, Resolved).
+-   **Activity Log**: detailed history of all actions and comments on a ticket.
+-   **Filtering & Pagination**: Efficiently manage large volumes of tickets.
 
-## 🚀 How It Works
+### 👥 User Management (Admin)
+-   **Role-Based Access Control (RBAC)**: Distinct roles for Residents, Committee Members, and Admins.
+-   **User Approval Workflow**: New registrations are set to **Pending**. Admins must approve users before they can log in.
+-   **Status Management**: Admins can Activate, Deactivate, or Approve users.
+-   **Mobile Responsive**: Fully optimized "Card View" for managing users on mobile devices.
 
-Currently, this application runs in **Demo Mode**. Here is what that means for you:
+### 🔐 Authentication & Security
+-   **Firebase Auth**: Secure email/password authentication.
+-   **Protected Routes**: ensuring only authorized personnel access admin sections.
+-   **Session Management**: Secure session handling with automatic logout for deactivated users.
 
-### 1. No Server Required (Yet)
-The app runs entirely in your browser. It simulates a connection to a real database using something called "Local Storage".
-- **Data Persistence**: If you create a ticket and refresh the page, the ticket will still be there!
-- **Device Specific**: Since data maps to your specific browser, if you open the link on a different computer or phone, you won't see the tickets created on the first device.
+## 🛠️ Tech Stack
 
-### 2. Smart Login
-The app is protected. You must log in to access the dashboard.
-- **Demo Credentials**:
-  - **Email**: `admin@bma.com`
-  - **Password**: `password`
+-   **Frontend Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Material UI (MUI)](https://mui.com/)
+-   **Backend / DB**: [Firebase](https://firebase.google.com/) (Authentication & Firestore)
+-   **Icons**: [Lucide React](https://lucide.dev/)
+-   **State/Data Fetching**: [TanStack Query](https://tanstack.com/query/latest)
+-   **Forms**: React Hook Form + Zod Validation
 
-## 📱 User Guide (Walkthrough)
+## 📱 Responsiveness
+The application is designed with a **Mobile-First** approach:
+-   **User Management**: Switches seamlessly between a Desktop Table view and a Mobile Card view.
+-   **Navigation**: Adaptive sidebar and layout for various screen sizes.
 
-### Step 1: Login
-When you open the app, you will be greeted by a secure login screen. Enter the demo credentials above to enter.
+## 🏃‍♂️ Getting Started
 
-### Step 2: The Dashboard
-Once logged in, you land on the **Dashboard**. This is your control center.
-- **Stats Cards**: Quickly see how many tickets are Open, In Progress, or Resolved.
-- **Recent Activity**: A list of the latest reported issues.
+1.  **Clone the repository**
+    ```bash
+    git clone <repository-url>
+    cd bma_maintainance_client
+    ```
 
-### Step 3: Managing Tickets
-Click on **Tickets** in the sidebar (or the bottom bar on mobile).
-- **Search & Filter**: Type to find specific issues or click buttons to filter by status (e.g., only show "Open" tickets).
-- **Create New**: Click the "New Ticket" button to report a problem. You can specify the Category (Plumbing, Electrical, etc.) and Priority (Low to Critical).
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-### Step 4: Tracking & Resolution
-Click on any ticket card to see its full details.
-- **Status Updates**: As work progresses, change the status from "Open" to "In Progress" and finally "Resolved".
-- **Activity Log**: Every action (creation, status change, comment) is automatically recorded in the history log with a timestamp.
-48: 
-49: ### Step 5: Notifications
-50: - **Instant Feedback**: Start creating tickets and get instant feedback with beautiful toast notifications located at the top-right corner of your screen.
-51:   - **Green Check**: For successful actions.
-52:   - **Red Alert**: For interruptions or errors.
+3.  **Environment Setup**
+    Create a `.env` file in the root directory with your Firebase configuration:
+    ```env
+    VITE_FIREBASE_API_KEY=your_api_key
+    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+    VITE_FIREBASE_PROJECT_ID=your_project_id
+    VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    VITE_FIREBASE_APP_ID=your_app_id
+    ```
 
-## 🛠 For Developers
+4.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
 
-This project is built using:
-- **React.js** (User Interface)
-- **Tailwind CSS** (Styling)
-- **Radix UI** & **Sonner** (Components & Notifications)
-- **Vite** (Build Tool)
+## 📜 Scripts
 
-**Architecture**:
-It uses a **Service Abstraction Layer**. Currently, `auth.service.js` and `ticket.service.js` interact with a mock data store. When you are ready for a real backend (like Firebase, Supabase, or a Node.js API), you strictly only need to update these service files. The rest of the UI will remain unchanged.
-
----
-
-*Note: This is a production-ready frontend client waiting for a backend connection.*
+-   `npm run dev`: Start the development server.
+-   `npm run build`: Build the application for production.
+-   `npm run preview`: Preview the production build locally.

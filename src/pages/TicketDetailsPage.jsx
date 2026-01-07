@@ -33,7 +33,7 @@ export default function TicketDetailsPage() {
 
     const handleStatusChange = async (newStatus) => {
         try {
-            const updated = await ticketService.updateStatus(ticket.id, newStatus, user.id);
+            const updated = await ticketService.updateStatus(ticket.id, newStatus, user.id, user.name || user.email);
             setTicket(updated);
         } catch (error) {
             console.error('Failed to update status:', error);
@@ -46,7 +46,7 @@ export default function TicketDetailsPage() {
 
         setSending(true);
         try {
-            const updated = await ticketService.addComment(ticket.id, comment, user.id);
+            const updated = await ticketService.addComment(ticket.id, comment, user.id, user.name || user.email);
             setTicket(updated);
             setComment('');
         } catch (error) {
@@ -134,10 +134,10 @@ export default function TicketDetailsPage() {
                                     <div className="flex-1 space-y-1">
                                         <div className="flex justify-between items-center">
                                             <p className="text-sm font-medium text-slate-900">
-                                                {log.user_id === user.id ? 'You' : 'User'}
+                                                {log.user_name || (log.user_id === user.id ? 'You' : 'User')}
                                                 <span className="font-normal text-slate-500"> {log.action.toLowerCase()}</span>
                                             </p>
-                                            <span className="text-xs text-slate-400">{new Date(log.timestamp).toLocaleDateString()}</span>
+                                            <span className="text-xs text-slate-400">{new Date(log.timestamp).toLocaleString()}</span>
                                         </div>
                                         {log.details && (
                                             <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md mt-2">{log.details}</p>

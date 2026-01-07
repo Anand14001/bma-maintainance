@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -99,8 +99,9 @@ export default function LoginPage() {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-center text-xs text-slate-500">
+                <CardFooter className="flex flex-col gap-2 justify-center text-xs text-slate-500">
                     <p>Demo Credentials: admin@bma.com / password</p>
+                    <p>Don't have an account? <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link></p>
                 </CardFooter>
             </Card>
         </div>

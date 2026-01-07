@@ -40,7 +40,7 @@ export default function CreateTicketPage() {
             const newTicket = await ticketService.create({
                 ...data,
                 created_by: user.id
-            });
+            }, user.name || user.email);
             toast.success("Ticket created successfully!");
             navigate(`/tickets/${newTicket.id}`);
         } catch (error) {

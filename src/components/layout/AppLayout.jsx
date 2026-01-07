@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
-import { LayoutDashboard, Ticket, LogOut, PlusCircle, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Ticket, LogOut, PlusCircle, Loader2, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export default function AppLayout() {
@@ -19,6 +19,10 @@ export default function AppLayout() {
         { href: '/', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/tickets', label: 'Tickets', icon: Ticket },
     ];
+
+    if (user?.role === 'admin') {
+        navItems.push({ href: '/users', label: 'Users', icon: Users });
+    }
 
     if (isLoading) {
         return (
