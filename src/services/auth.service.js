@@ -3,7 +3,8 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    createUserWithEmailAndPassword
+    createUserWithEmailAndPassword,
+    sendEmailVerification
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -206,5 +207,22 @@ export const authService = {
 
     onAuthStateChanged: (callback) => {
         return onAuthStateChanged(auth, callback);
+    },
+
+    sendVerificationEmail: async () => {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No user is currently signed in');
+            }
+            if (user.emailVerified) {
+                throw new Error('Email is already verified');
+            }
+            await sendEmailVerification(user);
+            return true;
+        } catch (error) {
+            console.error('Error sending verification email:', error);
+            throw error;
+        }
     }
 };

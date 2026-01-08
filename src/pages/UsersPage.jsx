@@ -14,6 +14,7 @@ import {
     Select,
     SelectItem,
 } from "../components/ui/select"
+import { Pagination } from '../components/ui/pagination';
 
 // MUI Imports
 import Dialog from '@mui/material/Dialog';
@@ -39,6 +40,10 @@ export default function UsersPage() {
     // Status Filter State (active, pending, inactive)
     const [statusFilter, setStatusFilter] = useState('active');
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(createUserSchema),
         defaultValues: { role: 'resident' }
@@ -61,6 +66,11 @@ export default function UsersPage() {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    // Reset to page 1 when status filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
 
     const onCreateUser = async (data) => {
         setIsCreating(true);
@@ -111,6 +121,13 @@ export default function UsersPage() {
         const userStatus = user.status || (user.isActive === false ? 'inactive' : 'active');
         return userStatus === statusFilter;
     });
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredUsers.length / pageSize);
+    const paginatedUsers = filteredUsers.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
 
     // Reusable Status Badge
     const StatusBadge = ({ status, isActive }) => {
@@ -276,13 +293,33 @@ export default function UsersPage() {
                 </Tabs>
             </div>
 
+            {/* Page Size Selector */}
+            {filteredUsers.length > 0 && (
+                <div className="flex justify-end items-center gap-2">
+                    <label htmlFor="pageSize" className="text-sm text-slate-500">Rows per page:</label>
+                    <select
+                        id="pageSize"
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setCurrentPage(1);
+                        }}
+                        className="h-8 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                    >
+                        {[10, 20, 50].map(size => (
+                            <option key={size} value={size}>{size}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
             {/* Mobile View: Cards */}
             <div className="md:hidden space-y-4">
                 {filteredUsers.length === 0 ? (
                     <div className="text-center py-8 text-slate-500">
                         No {statusFilter === 'pending' ? 'pending' : statusFilter} users found.
                     </div>
-                ) : filteredUsers.map((user) => (
+                ) : paginatedUsers.map((user) => (
                     <Card key={user.id} className="overflow-hidden">
                         <CardContent className="p-4 space-y-4">
                             <div className="flex items-start justify-between">
@@ -332,6 +369,13 @@ export default function UsersPage() {
                         </CardContent>
                     </Card>
                 ))}
+
+                {/* Mobile Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             {/* Desktop View: Table */}
@@ -353,7 +397,7 @@ export default function UsersPage() {
                                     No {statusFilter === 'pending' ? 'pending' : statusFilter} users found.
                                 </td>
                             </tr>
-                        ) : filteredUsers.map((user) => (
+                        ) : paginatedUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
@@ -393,6 +437,15 @@ export default function UsersPage() {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Desktop Pagination */}
+            <div className="hidden md:block">
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </div>
         </div>
     );
